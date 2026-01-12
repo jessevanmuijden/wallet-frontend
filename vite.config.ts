@@ -1,16 +1,30 @@
+import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import checker from 'vite-plugin-checker';
 import { VitePWA } from 'vite-plugin-pwa';
-import { ManifestPlugin, MobileWrapperWKAppLinksPlugin, RobotsTxtPlugin, SitemapPlugin } from './vite-plugins';
+import {
+	BrandingManifestPlugin,
+	MetadataImagePlugin,
+	MobileWrapperWKAppLinksPlugin,
+	RobotsTxtPlugin,
+	SitemapPlugin,
+	ThemePlugin,
+	getBrandingHash
+} from './vite-plugins';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), '');
+
+	const brandingHash = getBrandingHash(path.resolve('branding')); // Compute branding hash from your branding folder
+	process.env.VITE_BRANDING_HASH = brandingHash; // import.meta.env.VITE_BRANDING_HASH works in TS/JS
+	env.VITE_BRANDING_HASH = brandingHash; // VITE_BRANDING_HASH% works in index.html
 	return {
 		base: '/',
 		plugins: [
+			ThemePlugin(),
 			react(),
 			tailwindcss(),
 			svgr(),
@@ -19,7 +33,8 @@ export default defineConfig(({ mode }) => {
 					lintCommand: 'eslint "./src/**/*.{js,jsx,ts,tsx}"',
 				}
 			}),
-			ManifestPlugin(env),
+			BrandingManifestPlugin(env),
+			MetadataImagePlugin(env),
 			RobotsTxtPlugin(env),
 			SitemapPlugin(env),
 			MobileWrapperWKAppLinksPlugin(env),
